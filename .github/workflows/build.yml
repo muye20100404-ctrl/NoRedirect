@@ -60,7 +60,8 @@ jobs:
         run: |
           export THEOS=$HOME/theos-roothide
           source devkit/roothide.sh
-          make clean package
+          # 关键修改：在这里添加了 ADDITIONAL_CFLAGS 宏定义，在编译时全局禁用警告
+          make clean package ADDITIONAL_CFLAGS="-DNO_LIBROOT_WARNING=1"
 
       - name: Collect dSYMs & Parse Version
         run: |
