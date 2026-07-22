@@ -25,33 +25,40 @@ jobs:
         with:
           xcode-version: '15.4'
 
+      # 1. 安装标准 Theos
       - name: Setup Standard Theos
         run: |
-          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
           echo "THEOS_IGNORE_PARALLEL_BUILDING_NOTICE=yes" >> $HOME/.theosrc
           bash -c "$(curl -fsSL https://raw.githubusercontent.com/OwnGoalStudio/theos/refs/heads/master/bin/install-theos)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 2. 安装 RootHide Theos 到 $HOME/theos-roothide
       - name: Setup RootHide Theos
         run: |
           bash -c "$(curl -fsSL https://raw.githubusercontent.com/OwnGoalStudio/theos-roothide/refs/heads/master/bin/install-theos)"
         env:
-          THEOS: ${{ github.workspace }}/../theos-roothide
+          THEOS: /Users/runner/theos-roothide
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 3. 编译 arm
       - name: Build (arm)
         run: |
+          export THEOS=$HOME/theos
           source devkit/env.sh
           make clean package
 
+      # 4. 编译 arm64 (Rootless)
       - name: Build (arm64)
         run: |
+          export THEOS=$HOME/theos
           source devkit/rootless.sh
           make clean package
 
+      # 5. 编译 arm64e (RootHide)
       - name: Build (arm64e)
         run: |
+          export THEOS=$HOME/theos-roothide
           source devkit/roothide.sh
           make clean package
 
@@ -60,7 +67,6 @@ jobs:
           mkdir -p ./packages
           find .theos/obj -name "*.dSYM" -exec cp -r {} ./packages/ \; || true
           
-          # Extract version from control file if present, fallback to env.VERSION
           if [ -f .theos/_/DEBIAN/control ]; then
             EXTRACTED_VER=$(grep '^Version:' .theos/_/DEBIAN/control | awk '{print $2}')
             echo "VERSION=$EXTRACTED_VER" >> $GITHUB_ENV
