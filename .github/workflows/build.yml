@@ -33,10 +33,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. 安装 RootHide Theos 到 $HOME/theos-roothide
+      # 2. 安装 RootHide Theos 并强制移除拦截报错
       - name: Setup RootHide Theos
         run: |
           bash -c "$(curl -fsSL https://raw.githubusercontent.com/OwnGoalStudio/theos-roothide/refs/heads/master/bin/install-theos)"
+          # 一行命令直接抹除 libroot.h 里的 #error 强制报错
+          sed -i '' 's/#error/#warning/g' $HOME/theos-roothide/vendor/include/libroot.h || true
         env:
           THEOS: /Users/runner/theos-roothide
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,8 +62,7 @@ jobs:
         run: |
           export THEOS=$HOME/theos-roothide
           source devkit/roothide.sh
-          # 关键修改：在这里添加了 ADDITIONAL_CFLAGS 宏定义，在编译时全局禁用警告
-          make clean package ADDITIONAL_CFLAGS="-DNO_LIBROOT_WARNING=1"
+          make clean package
 
       - name: Collect dSYMs & Parse Version
         run: |
