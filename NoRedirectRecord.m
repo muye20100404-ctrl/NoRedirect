@@ -1,3 +1,4 @@
+#define NO_LIBROOT_WARNING 1
 #import "NoRedirectRecord.h"
 
 #import <Foundation/Foundation.h>
